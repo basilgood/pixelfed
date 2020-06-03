@@ -1,12 +1,15 @@
-
 {
-  description = "A flake for building Hello World";
+  description = "A free and ethical photo sharing platform.";
 
-  outputs = { self, nixpkgs }: {
+  outputs = { self, nixpkgs }: rec {
 
-    packages.x86_64-linux.hello = nixpkgs.legacyPackages.x86_64-linux.hello;
+    packages.x86_64-linux.pixelfed = (
+      import ./default.nix {
+        inherit nixpkgs;
+      }
+    ).pixelfed;
 
-    defaultPackage.x86_64-linux = self.packages.x86_64-linux.hello;
+    defaultPackage.x86_64-linux = self.packages.x86_64-linux.pixelfed;
 
   };
 }
