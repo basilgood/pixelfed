@@ -7,6 +7,8 @@ let
     system = "x86_64-linux";
   };
 
+  composerPackages = import ./composer;
+
   pixelfed = with pkgs; stdenv.mkDerivation rec {
     pname = "pixelfed";
     version = "0.10.9";
