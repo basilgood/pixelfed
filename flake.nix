@@ -1,15 +1,25 @@
 {
-  description = "A free and ethical photo sharing platform.";
+  description = "pixelfed";
 
-  outputs = { self, nixpkgs }: rec {
+  # inputs = {
+  #   nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  # };
 
-    packages.x86_64-linux.pixelfed = (
-      import ./default.nix {
-        inherit nixpkgs;
-      }
-    ).pixelfed;
+  outputs = { self, nixpkgs }:
+    let
+      system = "x86_64-linux";
 
-    defaultPackage.x86_64-linux = self.packages.x86_64-linux.pixelfed;
+      pkgs = import nixpkgs {
+        inherit system;
+      };
+    in rec
+    {
+      packages.x86_64-linux.pixelfed = (
+        import ./composer/default.nix {
+          inherit pkgs;
+        }
+      ).pixelfed;
+      defaultPackage.x86_64-linux = packages.x86_64-linux.pixelfed;
 
-  };
+    };
 }
