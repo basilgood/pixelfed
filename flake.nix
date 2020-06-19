@@ -12,7 +12,8 @@
       pkgs = import nixpkgs {
         inherit system;
       };
-    in rec
+    in
+    rec
     {
       packages.x86_64-linux.pixelfed = (
         import ./composer/default.nix {
@@ -21,5 +22,8 @@
       ).pixelfed;
       defaultPackage.x86_64-linux = packages.x86_64-linux.pixelfed;
 
+      nixosModules.pixelfed = { pkgs, ... }: {
+
+      };
     };
 }
