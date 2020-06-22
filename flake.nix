@@ -1,29 +1,61 @@
 {
   description = "pixelfed";
 
-  # inputs = {
-  #   nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  # };
+  inputs.nixpkgs.url = "nixpkgs";
 
-  outputs = { self, nixpkgs }:
+  inputs.pixelfed-src = { url = github:pixelfed/pixelfed/dev; flake = false; };
+
+  outputs = { self, nixpkgs, pixelfed-src }:
     let
-      system = "x86_64-linux";
-
-      pkgs = import nixpkgs {
-        inherit system;
-      };
+      version = builtins.substring 0 8 pixelfed-src.lastModifiedDate;
+      supportedSystems = [ "x86_64-linux" ];
+      forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
+      nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; overlays = [ self.overlay ]; });
     in
-    rec
     {
-      packages.x86_64-linux.pixelfed = (
-        import ./composer/default.nix {
-          inherit pkgs;
-        }
-      ).pixelfed;
-      defaultPackage.x86_64-linux = packages.x86_64-linux.pixelfed;
+      overlay = final: prev: {
 
-      nixosModules.pixelfed = { pkgs, ... }: {
-
+        pixelfed = final.callPackage ./pixelfed {
+          src = pixelfed-src;
+          inherit version;
+        };
       };
+      packages = forAllSystems (
+        system:
+        {
+          inherit (nixpkgsFor.${system}) pixelfed;
+        }
+      );
+      defaultPackage = forAllSystems (system: self.packages.${system}.pixelfed);
+      nixosModules =
+        {
+          pixelfed =
+            { pkgs, ... }:
+            {
+              imports =
+                [
+                  ./module.nix
+                ];
+
+              nixpkgs.overlays = [ self.overlay ];
+            };
+        };
+      nixosConfigurations.container =
+        nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules =
+            [
+              self.nixosModules.pixelfed
+              ({
+                system.configurationRevision = "whatever";
+                boot.isContainer = true;
+                networking.useDHCP = false;
+                networking.firewall.allowedTCPPorts = [ 80 ];
+                services.pixelfed = {
+                  enable = true;
+                };
+              })
+            ];
+        };
     };
 }
