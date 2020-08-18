@@ -16,6 +16,11 @@ charset = utf-8
 indent_style = space
 indent_size = 2
 
+# Match markdown files, set indent to spaces with width of two
+[*.md]
+indent_style = space
+indent_size = 2
+
 # Match shell/perl, set indent to spaces with width of two
 [*.{sh,pl}]
 indent_style = space
